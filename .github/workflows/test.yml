@@ -42,6 +42,9 @@ jobs:
       - run: |
           gh cache delete 'npm-${{ steps.cache-key.outputs.suffix }}-${{ hashFiles('package-lock.json') }}'
           gh cache delete 'node_modules-${{ steps.cache-key.outputs.suffix }}-${{ hashFiles('package-lock.json') }}'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_PROMPT_DISABLED: 1
         continue-on-error: true
       - uses: ./save
       - id: npm-cache
