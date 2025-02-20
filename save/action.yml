@@ -1,0 +1,44 @@
+name: save npm cache
+description: save npm cache and node_modules
+
+inputs:
+  install:
+    description: 'install dependencies before saving cache'
+    required: false
+    default: 'false'
+  token:
+    description: NPM_AUTH_TOKEN
+    required: false
+    default: ''
+
+runs:
+  using: composite
+  steps:
+    - if: inputs.install != 'false'
+      shell: bash
+      run: npm ci --no-audit --ignore-scripts --prefer-offline --no-progress
+      env:
+        NPM_AUTH_TOKEN: ${{ inputs.token }}
+
+    - id: npm-cache
+      shell: bash
+      run: echo "dir=$(npm config get cache)" | tee -a "$GITHUB_OUTPUT"
+
+    - id: os-info
+      uses: openameba/action-os-info@209c205069a96ca10d180f2fdbd11e285d09b1d1 # v1.0.0
+
+    - id: cache-key
+      shell: bash
+      run: >
+        echo 'suffix=${{ format('{0}-{1}-{2}-{3}', runner.environment, runner.arch, runner.os, steps.os-info.outputs.version) }}'
+        | tee -a "$GITHUB_OUTPUT"
+
+    - uses: actions/cache/save@1bd1e32a3bdc45362d1e726936510720a7c30a57 # v4.2.0
+      with:
+        path: ${{ steps.npm-cache.outputs.dir }}
+        key: npm-${{ steps.cache-key.outputs.suffix }}-${{ hashFiles('package-lock.json') }}
+
+    - uses: actions/cache/save@1bd1e32a3bdc45362d1e726936510720a7c30a57 # v4.2.0
+      with:
+        path: '**/node_modules'
+        key: node_modules-${{ steps.cache-key.outputs.suffix }}-${{ hashFiles('package-lock.json') }}
