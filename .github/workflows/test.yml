@@ -32,7 +32,7 @@ jobs:
         with:
           node-version: lts/*
       - id: os-info
-        uses: openameba/action-os-info@209c205069a96ca10d180f2fdbd11e285d09b1d1 # v1.0.0
+        uses: openameba/action-os-info@b1395f434e5fc0aab838ce4f823d6c844e230f07 # v1.0.0
       - id: cache-key
         run: >
           echo 'suffix=${{ format('{0}-{1}-{2}-{3}', runner.environment, runner.arch, runner.os, steps.os-info.outputs.version) }}'
@@ -91,7 +91,7 @@ jobs:
         with:
           node-version: lts/*
       - id: os-info
-        uses: openameba/action-os-info@209c205069a96ca10d180f2fdbd11e285d09b1d1 # v1.0.0
+        uses: openameba/action-os-info@b1395f434e5fc0aab838ce4f823d6c844e230f07 # v1.0.0
       - id: cache-key
         run: >
           echo 'suffix=${{ format('{0}-{1}-{2}-{3}', runner.environment, runner.arch, runner.os, steps.os-info.outputs.version) }}'
