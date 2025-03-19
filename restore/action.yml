@@ -23,7 +23,7 @@ runs:
         echo 'suffix=${{ format('{0}-{1}-{2}-{3}', runner.environment, runner.arch, runner.os, steps.os-info.outputs.version) }}'
         | tee -a "$GITHUB_OUTPUT"
 
-    - uses: actions/cache/restore@d4323d4df104b026a6aa633fdb11d772146be0bf # v4.2.2
+    - uses: actions/cache/restore@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
       with:
         path: ${{ steps.npm-cache.outputs.dir }}
         key: npm-${{ steps.cache-key.outputs.suffix }}-${{ hashFiles('package-lock.json') }}
@@ -32,7 +32,7 @@ runs:
           npm-
 
     - id: restore-node_modules
-      uses: actions/cache/restore@d4323d4df104b026a6aa633fdb11d772146be0bf # v4.2.2
+      uses: actions/cache/restore@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
       with:
         path: '**/node_modules'
         # NOTE: restore node_modules only when key matches exactly
