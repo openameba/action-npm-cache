@@ -7,6 +7,26 @@ inputs:
     required: false
     default: ''
 
+outputs:
+  npm-cache-hit:
+    description: see actions/cache
+    value: ${{ steps.restore-cache.outputs.cache-hit }}
+  npm-cache-primary-key:
+    description: see actions/cache
+    value: ${{ steps.restore-cache.outputs.cache-primary-key }}
+  npm-cache-matched-key:
+    description: see actions/cache
+    value: ${{ steps.restore-cache.outputs.cache-matched-key }}
+  npde_modules-cache-hit:
+    description: see actions/cache
+    value: ${{ steps.restore-node_modules.outputs.cache-hit }}
+  node_modules-cache-primary-key:
+    description: see actions/cache
+    value: ${{ steps.restore-node_modules.outputs.cache-primary-key }}
+  node_modules-cache-matched-key:
+    description: see actions/cache
+    value: ${{ steps.restore-node_modules.outputs.cache-matched-key }}
+
 runs:
   using: composite
   steps:
@@ -23,7 +43,8 @@ runs:
         echo 'suffix=${{ format('{0}-{1}-{2}-{3}', runner.environment, runner.arch, runner.os, steps.os-info.outputs.version) }}'
         | tee -a "$GITHUB_OUTPUT"
 
-    - uses: actions/cache/restore@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
+    - id: restore-cache
+      uses: actions/cache/restore@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
       with:
         path: ${{ steps.npm-cache.outputs.dir }}
         key: npm-${{ steps.cache-key.outputs.suffix }}-${{ hashFiles('package-lock.json') }}
