@@ -17,7 +17,7 @@ outputs:
   npm-cache-matched-key:
     description: see actions/cache
     value: ${{ steps.restore-cache.outputs.cache-matched-key }}
-  npde_modules-cache-hit:
+  node_modules-cache-hit:
     description: see actions/cache
     value: ${{ steps.restore-node_modules.outputs.cache-hit }}
   node_modules-cache-primary-key:
