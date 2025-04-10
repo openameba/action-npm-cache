@@ -99,6 +99,13 @@ jobs:
       - uses: actions/download-artifact@95815c38cf2ff2164869cbab79da8d1f422bc89e # v4.2.1
         with:
           name: metafiles-${{ steps.cache-key.outputs.suffix }}
-      - uses: ./restore
+      - id: restore
+        uses: ./restore
       - run: test -d "$(npm config get cache)"
       - run: test -d node_modules
+      - run: test -n '${{ steps.restore.outputs.npm-cache-hit }}'
+      - run: test -n '${{ steps.restore.outputs.npm-cache-primary-key }}'
+      - run: test -n '${{ steps.restore.outputs.npm-cache-matched-key }}'
+      - run: test -n '${{ steps.restore.outputs.node_modules-cache-hit }}'
+      - run: test -n '${{ steps.restore.outputs.node_modules-cache-primary-key }}'
+      - run: test -n '${{ steps.restore.outputs.node_modules-cache-matched-key }}'
