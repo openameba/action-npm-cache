@@ -2,6 +2,6 @@
   $schema: 'https://docs.renovatebot.com/renovate-schema.json',
   extends: [
     'local>openameba/renovate-config:main.json5',
-    ':automergeAll'
+    'local>openameba/renovate-config:automerge-all.json5'
   ]
 }
