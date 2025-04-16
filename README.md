@@ -11,6 +11,7 @@ steps:
     with:
       node-version: lts/*
   - uses: openameba/action-npm-cache/restore@v1
+  - run: npm test
   - if: github.ref_name == 'main'
     uses: openameba/action-npm-cache/save@v1
 ```
