@@ -19,6 +19,9 @@ jobs:
           - macos-latest
           - ubuntu-latest
           - windows-latest
+        pm:
+          - npm
+          - pnpm
     runs-on: ${{ matrix.runner }}
     timeout-minutes: 5
     permissions:
@@ -31,6 +34,10 @@ jobs:
       - uses: actions/setup-node@6044e13b5dc448c55e2357c09f80417699197238 # v6.2.0
         with:
           node-version: lts/*
+      - if: matrix.pm == 'pnpm'
+        uses: pnpm/action-setup@41ff72655975bd51cab0327fa583b6e92b6d3061 # v4.2.0
+        with:
+          version: 10
       - id: os-info
         uses: openameba/action-os-info@b1395f434e5fc0aab838ce4f823d6c844e230f07 # v1.0.0
       - id: cache-key
@@ -38,36 +45,51 @@ jobs:
           echo 'suffix=${{ format('{0}-{1}-{2}-{3}', runner.environment, runner.arch, runner.os, steps.os-info.outputs.version) }}'
           | tee -a "$GITHUB_OUTPUT"
       - run: echo '{"private":true}' | tee package.json
-      - run: npm install --no-audit --no-progress --prefer-offline --save-exact undici
+      - if: matrix.pm == 'pnpm'
+        run: pnpm install --prefer-offline --save-exact undici
+      - if: matrix.pm == 'npm'
+        run: npm install --no-audit --no-progress --prefer-offline --save-exact undici
       - run: |
-          gh cache delete 'npm-${{ steps.cache-key.outputs.suffix }}-${{ hashFiles('package-lock.json') }}'
-          gh cache delete 'node_modules-${{ steps.cache-key.outputs.suffix }}-${{ hashFiles('package-lock.json') }}'
+          gh cache delete '${{ matrix.pm }}-${{ steps.cache-key.outputs.suffix }}-${{ hashFiles('pnpm-lock.yaml', '**/package-lock.json') }}'
+          gh cache delete 'node_modules-${{ steps.cache-key.outputs.suffix }}-${{ hashFiles('**/package-lock.json') }}'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GH_PROMPT_DISABLED: 1
         continue-on-error: true
       - uses: ./save
       - id: npm-cache
-        run: echo "dir=$(npm config get cache)" >> "$GITHUB_OUTPUT"
+        run: |
+          case "$PM" in
+            pnpm)
+              echo "dir=$(pnpm store path)" | tee -a "$GITHUB_OUTPUT"
+              ;;
+            npm)
+              echo "dir=$(npm config get cache)" | tee -a "$GITHUB_OUTPUT"
+              ;;
+          esac
+        env:
+          PM: ${{ matrix.pm }}
       - uses: actions/cache/restore@cdf6c1fa76f9f475f3d7449005a359c84ca0f306 # v5.0.3
         with:
           path: ${{ steps.npm-cache.outputs.dir }}
-          key: npm-${{ steps.cache-key.outputs.suffix }}-${{ hashFiles('package-lock.json') }}
+          key: ${{ matrix.pm }}-${{ steps.cache-key.outputs.suffix }}-${{ hashFiles('pnpm-lock.yaml', '**/package-lock.json') }}
           fail-on-cache-miss: true
           lookup-only: true
-      - uses: actions/cache/restore@cdf6c1fa76f9f475f3d7449005a359c84ca0f306 # v5.0.3
+      - if: matrix.pm == 'npm'
+        uses: actions/cache/restore@cdf6c1fa76f9f475f3d7449005a359c84ca0f306 # v5.0.3
         with:
           path: '**/node_modules'
-          key: node_modules-${{ steps.cache-key.outputs.suffix }}-${{ hashFiles('package-lock.json') }}
+          key: node_modules-${{ steps.cache-key.outputs.suffix }}-${{ hashFiles('**/package-lock.json') }}
           fail-on-cache-miss: true
           lookup-only: true
       - uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
         with:
-          if-no-files-found: error
-          name: metafiles-${{ steps.cache-key.outputs.suffix }}
+          if-no-files-found: ignore
+          name: ${{ matrix.pm }}-metafiles-${{ steps.cache-key.outputs.suffix }}
           path: |
             package.json
             package-lock.json
+            pnpm-lock.yaml
           retention-days: 1
   restore:
     strategy:
@@ -77,6 +99,9 @@ jobs:
           - macos-latest
           - ubuntu-latest
           - windows-latest
+        pm:
+          - npm
+          - pnpm
     runs-on: ${{ matrix.runner }}
     needs: save
     timeout-minutes: 5
@@ -90,6 +115,10 @@ jobs:
       - uses: actions/setup-node@6044e13b5dc448c55e2357c09f80417699197238 # v6.2.0
         with:
           node-version: lts/*
+      - if: matrix.pm == 'pnpm'
+        uses: pnpm/action-setup@41ff72655975bd51cab0327fa583b6e92b6d3061 # v4.2.0
+        with:
+          version: 10
       - id: os-info
         uses: openameba/action-os-info@b1395f434e5fc0aab838ce4f823d6c844e230f07 # v1.0.0
       - id: cache-key
@@ -98,14 +127,20 @@ jobs:
           | tee -a "$GITHUB_OUTPUT"
       - uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
         with:
-          name: metafiles-${{ steps.cache-key.outputs.suffix }}
+          name: ${{ matrix.pm }}-metafiles-${{ steps.cache-key.outputs.suffix }}
       - id: restore
         uses: ./restore
-      - run: test -d "$(npm config get cache)"
-      - run: test -d node_modules
+      - if: matrix.pm == 'pnpm'
+        run: test -d "$(pnpm store path)"
+      - if: matrix.pm == 'npm'
+        run: test -d "$(npm config get cache)"
+      - if: matrix.pm == 'npm'
+        run: test -d node_modules
       - run: test -n '${{ steps.restore.outputs.npm-cache-hit }}'
       - run: test -n '${{ steps.restore.outputs.npm-cache-primary-key }}'
       - run: test -n '${{ steps.restore.outputs.npm-cache-matched-key }}'
       - run: test -n '${{ steps.restore.outputs.node_modules-cache-hit }}'
-      - run: test -n '${{ steps.restore.outputs.node_modules-cache-primary-key }}'
-      - run: test -n '${{ steps.restore.outputs.node_modules-cache-matched-key }}'
+      - if: matrix.pm == 'npm'
+        run: test -n '${{ steps.restore.outputs.node_modules-cache-primary-key }}'
+      - if: matrix.pm == 'npm'
+        run: test -n '${{ steps.restore.outputs.node_modules-cache-matched-key }}'
