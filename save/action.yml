@@ -14,15 +14,29 @@ inputs:
 runs:
   using: composite
   steps:
-    - if: inputs.install != 'false'
+    - id: detect-pm
+      shell: bash
+      run: |
+        if [ -f 'pnpm-lock.yaml' ]
+        then
+          echo 'pm=pnpm' | tee -a "$GITHUB_OUTPUT"
+          echo "dir=$(pnpm store path)" | tee -a "$GITHUB_OUTPUT"
+        else
+          echo 'pm=npm' | tee -a "$GITHUB_OUTPUT"
+          echo "dir=$(npm config get cache)" | tee -a "$GITHUB_OUTPUT"
+        fi
+
+    - if: inputs.install != 'false' && steps.detect-pm.outputs.pm == 'pnpm'
+      shell: bash
+      run: pnpm install --frozen-lockfile --ignore-scripts --prefer-offline
+      env:
+        NPM_AUTH_TOKEN: ${{ inputs.token }}
+
+    - if: inputs.install != 'false' && steps.detect-pm.outputs.pm == 'npm'
       shell: bash
       run: npm ci --no-audit --ignore-scripts --prefer-offline --no-progress
       env:
         NPM_AUTH_TOKEN: ${{ inputs.token }}
-
-    - id: npm-cache
-      shell: bash
-      run: echo "dir=$(npm config get cache)" | tee -a "$GITHUB_OUTPUT"
 
     - id: os-info
       uses: openameba/action-os-info@b1395f434e5fc0aab838ce4f823d6c844e230f07 # v1.0.0
@@ -35,10 +49,11 @@ runs:
 
     - uses: actions/cache/save@cdf6c1fa76f9f475f3d7449005a359c84ca0f306 # v5.0.3
       with:
-        path: ${{ steps.npm-cache.outputs.dir }}
-        key: npm-${{ steps.cache-key.outputs.suffix }}-${{ hashFiles('package-lock.json') }}
+        path: ${{ steps.detect-pm.outputs.dir }}
+        key: ${{ steps.detect-pm.outputs.pm }}-${{ steps.cache-key.outputs.suffix }}-${{ hashFiles('pnpm-lock.yaml', '**/package-lock.json') }}
 
-    - uses: actions/cache/save@cdf6c1fa76f9f475f3d7449005a359c84ca0f306 # v5.0.3
+    - if: steps.detect-pm.outputs.pm == 'npm'
+      uses: actions/cache/save@cdf6c1fa76f9f475f3d7449005a359c84ca0f306 # v5.0.3
       with:
         path: '**/node_modules'
-        key: node_modules-${{ steps.cache-key.outputs.suffix }}-${{ hashFiles('package-lock.json') }}
+        key: node_modules-${{ steps.cache-key.outputs.suffix }}-${{ hashFiles('**/package-lock.json') }}
