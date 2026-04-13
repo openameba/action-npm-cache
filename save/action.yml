@@ -47,13 +47,13 @@ runs:
         echo 'suffix=${{ format('{0}-{1}-{2}-{3}', runner.environment, runner.arch, runner.os, steps.os-info.outputs.version) }}'
         | tee -a "$GITHUB_OUTPUT"
 
-    - uses: actions/cache/save@668228422ae6a00e4ad889ee87cd7109ec5666a7 # v5.0.4
+    - uses: actions/cache/save@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
       with:
         path: ${{ steps.detect-pm.outputs.dir }}
         key: ${{ steps.detect-pm.outputs.pm }}-${{ steps.cache-key.outputs.suffix }}-${{ hashFiles('pnpm-lock.yaml', '**/package-lock.json') }}
 
     - if: steps.detect-pm.outputs.pm == 'npm'
-      uses: actions/cache/save@668228422ae6a00e4ad889ee87cd7109ec5666a7 # v5.0.4
+      uses: actions/cache/save@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
       with:
         path: '**/node_modules'
         key: node_modules-${{ steps.cache-key.outputs.suffix }}-${{ hashFiles('**/package-lock.json') }}
