@@ -37,7 +37,7 @@ jobs:
       - if: matrix.pm == 'pnpm'
         uses: pnpm/action-setup@91ab88e2619ed1f46221f0ba42d1492c02baf788 # v6.0.6
         with:
-          version: 10
+          version: 11
       - id: os-info
         uses: openameba/action-os-info@b1395f434e5fc0aab838ce4f823d6c844e230f07 # v1.0.0
       - id: cache-key
@@ -118,7 +118,7 @@ jobs:
       - if: matrix.pm == 'pnpm'
         uses: pnpm/action-setup@91ab88e2619ed1f46221f0ba42d1492c02baf788 # v6.0.6
         with:
-          version: 10
+          version: 11
       - id: os-info
         uses: openameba/action-os-info@b1395f434e5fc0aab838ce4f823d6c844e230f07 # v1.0.0
       - id: cache-key
