@@ -69,14 +69,14 @@ jobs:
           esac
         env:
           PM: ${{ matrix.pm }}
-      - uses: actions/cache/restore@caa296126883cff596d87d8935842f9db880ef25 # v5.1.0
+      - uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: ${{ steps.npm-cache.outputs.dir }}
           key: ${{ matrix.pm }}-${{ steps.cache-key.outputs.suffix }}-${{ hashFiles('pnpm-lock.yaml', '**/package-lock.json') }}
           fail-on-cache-miss: true
           lookup-only: true
       - if: matrix.pm == 'npm'
-        uses: actions/cache/restore@caa296126883cff596d87d8935842f9db880ef25 # v5.1.0
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: '**/node_modules'
           key: node_modules-${{ steps.cache-key.outputs.suffix }}-${{ hashFiles('**/package-lock.json') }}
